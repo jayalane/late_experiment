@@ -77,7 +77,8 @@ for name, distribution in things:
             try:
                 results[name][str(x * 100)]['p2'].append(stats.percentiles[x])
             except KeyError:
-                del results[name][str(x * 100)]['p2']
+                if 'p2' in results[name][str(x * 100)]:
+                    del results[name][str(x * 100)]['p2']
             for samp in samples:
                 short_array = np.array(samp.sample)
                 results[name][str(x * 100 )]['reservoir' +  str(samp.sample_size)].append(np.percentile(short_array, x * 100))
