@@ -7,6 +7,7 @@ import array
 import random
 import functools
 import json
+import math
 
 _ITER = 100000       # size of population  should be 10 m
 _PERC = [0.25, 0.5, 0.99, 0.9, 0.95]  #  percentiles to check
@@ -20,7 +21,7 @@ def variance(s):
     avg = average(s)
     return average(map(lambda x: (x - avg)**2, s))
 
-def stdev(s):
+def stddev(s):
     return math.sqrt(variance(s))
 
 
@@ -77,7 +78,7 @@ for name, distribution in things:
             for samp in samples:
                 short_array = np.array(samp.sample)
                 results[name][str(x * 100 )]['reservoir' +  str(samp.sample_size)].append(np.percentile(short_array, x * 100))
-    with open("results-" + name, 'w'):
+    with open("results-" + name, 'w') as f:
         print >> f, json.dumps(results[name])
     for x in _PERC:
         for a in results[name][str(x * 100)].keys():
