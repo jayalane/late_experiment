@@ -77,5 +77,9 @@ for name, distribution in things:
             for samp in samples:
                 short_array = np.array(samp.sample)
                 results[name][str(x * 100 )]['reservoir' +  str(samp.sample_size)].append(np.percentile(short_array, x * 100))
-
-    print json.dumps(results)
+    with open("results-" + name, 'w'):
+        print >> f, json.dumps(results[name])
+    for x in _PERC:
+        for a in results[name][str(x * 100)].keys():
+            print a, average(results[name][str(x * 100)][a]), stddev(results[name][str(x * 100)][a])
+    
