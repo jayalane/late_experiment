@@ -9,10 +9,10 @@ import functools
 import json
 import math
 
-_ITER = 100000       # size of population  should be 10 m
-_PERC = [0.25, 0.5, 0.99, 0.9, 0.95]  #  percentiles to check
+_ITER = 10000000       # size of population
+_PERC = [0.25, 0.5, 0.99, 0.9, 0.95, 0.999]  #  percentiles to check  0.999
 _RES_SIZES = [8192, 16384, 32768]    # sizes of reservoir to check
-
+_TRIES = 100    # repeat sampling experiment this many times
 
 def average(s):
     return sum(s) * 1.0 / len(s)
@@ -26,25 +26,25 @@ def stddev(s):
 
 
 
-things = [('expo, 1', functools.partial(random.expovariate, 1)), 
-          ('expo, 10', functools.partial(random.expovariate, 10)), 
-          ('expo, 100', functools.partial(random.expovariate, 100)),
-          ('expo, 100', functools.partial(random.expovariate, 100)),
-          ('pareto, 1', functools.partial(random.paretovariate, 1)),
-          ('pareto, 10', functools.partial(random.paretovariate, 10)),
-          ('pareto, 100', functools.partial(random.paretovariate, 100)),
-          ('inv norm, 0, 1', lambda:  1/(random.gauss(0, 1))),
-          ('inv norm, 0, 10', lambda:  1/(random.gauss(0, 10))),
-          ('inv norm, 0, 100', lambda:  1/(random.gauss(0, 100))),
-          ('gausss 1 1', functools.partial(random.gauss, 1, 1)),
-          ('gauss 10 1', functools.partial(random.gauss, 10, 1)),
-          ('gauss 100 1', functools.partial(random.gauss, 100, 1)),
-          ('gauss 1 10', functools.partial(random.gauss, 1, 10)),
-          ('gauss 10 10', functools.partial(random.gauss, 10, 10)),
-          ('gauss 100 10', functools.partial(random.gauss, 100, 10)),
-          ('gauss 1 100', functools.partial(random.gauss, 1, 100)),
-          ('gauss 10 100', functools.partial(random.gauss, 10, 100)),
-          ('gauss 100 100', functools.partial(random.gauss, 100, 100))]
+things = [('expo,1', functools.partial(random.expovariate, 1)), 
+          ('expo,10', functools.partial(random.expovariate, 10)), 
+          ('expo,100', functools.partial(random.expovariate, 100)),
+          ('expo,100', functools.partial(random.expovariate, 100)),
+          ('pareto,1', functools.partial(random.paretovariate, 1)),
+          ('pareto,10', functools.partial(random.paretovariate, 10)),
+          ('pareto,100', functools.partial(random.paretovariate, 100)),
+          ('inv norm,0,1', lambda:  1/(random.gauss(0, 1))),
+          ('inv norm,0,10', lambda:  1/(random.gauss(0, 10))),
+          ('inv norm,0,100', lambda:  1/(random.gauss(0, 100))),
+          ('gausss,1,1', functools.partial(random.gauss, 1, 1)),
+          ('gauss,10,1', functools.partial(random.gauss, 10, 1)),
+          ('gauss,100,1', functools.partial(random.gauss, 100, 1)),
+          ('gauss,1,10', functools.partial(random.gauss, 1, 10)),
+          ('gauss,10,10', functools.partial(random.gauss, 10, 10)),
+          ('gauss,100,10', functools.partial(random.gauss, 100, 10)),
+          ('gauss,1,100', functools.partial(random.gauss, 1, 100)),
+          ('gauss,10,100', functools.partial(random.gauss, 10, 100)),
+          ('gauss,100,100', functools.partial(random.gauss, 100, 100))]
 
 results = {}
 
@@ -74,13 +74,21 @@ for name, distribution in things:
             stats.add(num)
         for x in _PERC:
             results[name][str(x * 100)]['true'].append(np.percentile(nums, x * 100))
-            results[name][str(x * 100)]['p2'].append(stats.percentiles[x])
+            try:
+                results[name][str(x * 100)]['p2'].append(stats.percentiles[x])
+            except KeyError:
+                del results[name][str(x * 100)]['p2']
             for samp in samples:
                 short_array = np.array(samp.sample)
                 results[name][str(x * 100 )]['reservoir' +  str(samp.sample_size)].append(np.percentile(short_array, x * 100))
-    with open("results-" + name, 'w') as f:
+    with open("results-" + name + '.json', 'w') as f:
         print >> f, json.dumps(results[name])
     for x in _PERC:
+        print 'Results for ' + str(x * 100)
+        print "Method".ljust(20), "Average".ljust(20), "StdDev".ljust(20)
         for a in results[name][str(x * 100)].keys():
-            print a, average(results[name][str(x * 100)][a]), stddev(results[name][str(x * 100)][a])
-    
+            try:
+                print a.ljust(20), str(average(results[name][str(x * 100)][a])).ljust(20), str(stddev(results[name][str(x * 100)][a])).ljust(20)
+            except KeyError:
+                continue
+
