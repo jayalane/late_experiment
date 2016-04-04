@@ -82,7 +82,7 @@ for name, distribution in things:
             for samp in samples:
                 short_array = np.array(samp.sample)
                 results[name][str(x * 100 )]['reservoir' +  str(samp.sample_size)].append(np.percentile(short_array, x * 100))
-    with open("results-" + name + '.json', 'w') as f:
+    with open("results-" + str(_ITER) + " " + name + '.json', 'w') as f:
         print >> f, json.dumps(results[name])
     for x in _PERC:
         print 'Results for ' + str(x * 100)
